@@ -1,0 +1,57 @@
+#include <Servo.h>
+
+Servo servo;
+
+int eastLDR = 0;  // Pin for east LDR
+int westLDR = 1;  // Pin for west LDR
+
+int east = 0;     // Value read from east LDR
+int west = 0;     // Value read from west LDR
+int error = 0;    // Difference between east and west LDR values
+
+int servoposition = 90;  // Start with the servo in the middle position
+int threshold = 20;      // Dead zone threshold to prevent small movements
+
+void setup() {
+  servo.attach(9);                // Attach servo to pin 9
+  servo.write(servoposition);      // Set servo to middle position (90 degrees)
+  Serial.begin(9600);              // Start serial communication for debugging
+}
+
+void loop() {
+  east = analogRead(eastLDR);      // Read value from east LDR
+  west = analogRead(westLDR);      // Read value from west LDR
+
+  // Print values for debugging
+  Serial.print("East: ");
+  Serial.print(east);
+  Serial.print(" | West: ");
+  Serial.print(west);
+  Serial.print(" | Error: ");
+  Serial.print(error);
+  Serial.print(" | Servo Position: ");
+  Serial.println(servoposition);
+
+  // Calculate the error between the two LDRs
+  error = east - west;
+
+  // Apply dead zone logic
+  if (error > threshold) {  // Turn right if east is brighter
+    if (servoposition < 150) {
+      servoposition += 2;   // Move slowly to the right by 1 degree
+      servo.write(servoposition);
+      Serial.println("Turning right");
+    }
+  } else if (error < -threshold) {  // Turn left if west is brighter
+    if (servoposition > 30) {
+      servoposition -= 2;   // Move slowly to the left by 1 degree
+      servo.write(servoposition);
+      Serial.println("Turning left");
+    }
+  } else {
+    // Do nothing if the error is within the threshold range
+    Serial.println("Within dead zone, no movement");
+  }
+
+  delay(100);  // Delay for stability, you can adjust this value
+}
